@@ -1,0 +1,27 @@
+{
+  "name": "music-sync",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src -d lib",
+    "start": "nodemon --exec babel-node src/index.js",
+    "debug": "nodemon --exec babel-node src/index.js --inspect"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.3.4",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.4"
+  },
+  "dependencies": {
+    "btoa": "^1.2.1",
+    "dotenv": "^6.2.0",
+    "node-fetch": "^2.3.0",
+    "node-id3": "^0.1.7"
+  }
+}
