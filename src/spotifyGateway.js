@@ -4,57 +4,64 @@ import fetch from 'node-fetch';
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
-export const getToken = async ()=>{
-    console.log('clientId', clientId);
-    const base64EncodedAuth = btoa(`${clientId}:${clientSecret}`);
-    const result = await (await fetch('https://accounts.spotify.com/api/token',{
-        method: 'POST',
-        headers: {
-            'Content-Type':'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${base64EncodedAuth}`
-        },
-        body: 'grant_type=client_credentials'
-    }
-    )).json();
 
-    return result;
-}
-
-export const getPlaylist = async (token)=>{
-    const playlistId = '0ZcER45Gi6tBLHcTgXk8Ji';
-    let playlist = await (await fetch(`https://api.spotify.com/v1/playlists/${playlistId}`,{
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
+export default class SpotifyGateway{
+    async getToken(){
+        const base64EncodedAuth = btoa(`${clientId}:${clientSecret}`);
+        const result = await (await fetch('https://accounts.spotify.com/api/token',{
+            method: 'POST',
+            headers: {
+                'Content-Type':'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${base64EncodedAuth}`
+            },
+            body: 'grant_type=client_credentials'
         }
-    })).json();
+        )).json();
+    
+        return result;
+    }
 
-    let tracks = playlist.tracks;
-    let results = [];
+    async getPlaylist(){
+        if(!this.token){
+            this.token = (await this.getToken()).access_token;
+        }
 
-    results = results.concat(getSimpleList(tracks));
-
-
-
-    while(tracks.next){
-        tracks = await (await fetch(tracks.next,{
+        const playlistId = '0ZcER45Gi6tBLHcTgXk8Ji';
+        let playlist = await (await fetch(`https://api.spotify.com/v1/playlists/${playlistId}`,{
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${this.token}`
             }
         })).json();
-        results = results.concat(getSimpleList(tracks));
-    }
+
+        let tracks = playlist.tracks;
+        let results = [];
     
-    return results;
+        results = results.concat(this.getSimpleList(tracks));
+    
+    
+    
+        while(tracks.next){
+            tracks = await (await fetch(tracks.next,{
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            })).json();
+            results = results.concat(this.getSimpleList(tracks));
+        }
+        
+        return results;
+    }
+
+    getSimpleList(tracks){
+        return tracks.items.map(item=>{
+            const track = item.track;
+            return {
+                title: track.name,
+                artists: track.artists.map(artist=>artist.name)
+            }
+        });
+    }
 }
 
-const getSimpleList = tracks => {
-    return tracks.items.map(item=>{
-        const track = item.track;
-        return {
-            title: track.name,
-            artists: track.artists.map(artist=>artist.name)
-        }
-    });
-}

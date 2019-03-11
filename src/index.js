@@ -1,11 +1,15 @@
 import dotenv from 'dotenv/config';
-import {saveId3, testId3} from './otherFunc';
-import {getToken, getPlaylist} from './spotifyGateway';
+import SpotifyGateway from './spotifyGateway';
+import {compare} from './listComparer';
 
+import {getTagsForDirectory} from './fileReader';
 
 (async ()=>{
-    const tokenResponse = await getToken(); 
-    const playlist = await getPlaylist(tokenResponse.access_token);
+    const gateway = await new SpotifyGateway();
 
-    console.log(playlist);
+    const spotfify = await gateway.getPlaylist();
+
+    const files = await getTagsForDirectory();
+
+    compare(spotfify, files);
 })();
